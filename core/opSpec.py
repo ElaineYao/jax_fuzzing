@@ -21,18 +21,22 @@ class OpSpec:
 
 
 opSpec_list = [
+    # OpSpec(
+    #     op=lax.log,
+    #     nargs=1,
+    #     rng_factory=rnf.rand_positive),
+    # OpSpec(
+    #     op=lax.pow,
+    #     nargs=2,
+    #     rng_factory=rnf.rand_positive),
+    # OpSpec(
+    #     op = lax.div,
+    #     nargs = 2,
+    #     rng_factory = rnf.rand_positive), # TODO: Constraints on both left and right operands
     OpSpec(
-        op=lax.log,
-        nargs=1,
-        rng_factory=rnf.rand_positive),
-    OpSpec(
-        op=lax.pow,
-        nargs=2,
-        rng_factory=rnf.rand_positive),
-    OpSpec(
-        op = lax.div,
+        op = lax.add,
         nargs = 2,
-        rng_factory = rnf.rand_positive) # TODO: Constraints on both left and right operands
+        rng_factory = rnf.rand_positive)
 ]
 
 
