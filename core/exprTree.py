@@ -57,7 +57,6 @@ class BinaryOp(Node):
         self.left = left
         self.right = right
     def evaluate(self, inputs=None):
-        logging.debug(f"Evaluating BinaryOp: {inputs}")
         return self.operand(self.left.evaluate(inputs), self.right.evaluate(inputs))
     def __str__(self):
         return f"lax.{self.operand.__name__}(\n    {self.left},\n    {self.right}\n)"
@@ -69,8 +68,6 @@ def generate_expr_tree(depth, shape=(1,1), dtype=float, rng_factory=None, var_id
     if depth == 0:
         # Choose a variable or a constant
         if np.random.rand() < 0.5:
-            # Store the rng_factory instead of generating value
-            logging.debug(f"x{var_idx} created with rng_factory")
             return Var(var_idx, rng_factory, shape), var_idx + 1
         else:
             # Choose a constant with the same shape
