@@ -7,7 +7,7 @@ import os, sys
 proj_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(proj_root)
 
-from utils import utils
+from utils import utils, dtypes
 from core import rngFactory as rnf
 config = utils.load_yaml(os.path.join(proj_root, "configs.yaml"))
 
@@ -18,6 +18,7 @@ class OpSpec:
         self.rng_factory = rng_factory
         self.dtypes = dtypes
         self.tol = tol
+        self.dtypes = dtypes
 
 
 opSpec_list = [
@@ -36,7 +37,8 @@ opSpec_list = [
     OpSpec(
         op = lax.add,
         nargs = 2,
-        rng_factory = rnf.rand_positive)
+        rng_factory = rnf.rand_positive,
+        dtypes = dtypes.float_dtypes)
 ]
 
 

@@ -21,20 +21,21 @@ class Node:
         raise NotImplementedError("Subclasses must implement this method")
 
 class Var(Node):
-    def __init__(self, idx, rng_factory, shape):
+    def __init__(self, idx, rng_factory, shape, dtype=float):
         self.idx = idx
         self.rng_factory = rng_factory
         self.shape = shape
+        self.dtype = dtype
     def evaluate(self, inputs=None):
         if inputs is None:
-            return self.rng_factory(shape=self.shape)
-        return inputs[self.idx]
+            return self.rng_factory(shape=self.shape).astype(self.dtype)
+        return inputs[self.idx].astype(self.dtype)
     def __str__(self):
         return f"x{self.idx}"
 
 class Const(Node):
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, value, dtype=float):
+        self.value = np.array(value, dtype=dtype)
     def evaluate(self, inputs=None):
         return self.value
     def __str__(self):
@@ -43,51 +44,54 @@ class Const(Node):
         return f"{self.value}"
 
 class UnaryOp(Node):
-    def __init__(self, operand, child):
+    def __init__(self, operand, child, dtype=float):
         self.operand = operand
         self.child = child
+        self.dtype = dtype
     def evaluate(self, inputs=None):
-        return self.operand(self.child.evaluate(inputs))
+        return self.operand(self.child.evaluate(inputs).astype(self.dtype))
     def __str__(self):
         return f"lax.{self.operand.__name__}(\n    {self.child}\n)"
 
 class BinaryOp(Node):
-    def __init__(self, operand, left, right):
+    def __init__(self, operand, left, right, dtype=float):
         self.operand = operand
         self.left = left
         self.right = right
+        self.dtype = dtype
     def evaluate(self, inputs=None):
-        return self.operand(self.left.evaluate(inputs), self.right.evaluate(inputs))
+        return self.operand(self.left.evaluate(inputs).astype(self.dtype), self.right.evaluate(inputs).astype(self.dtype))
     def __str__(self):
         return f"lax.{self.operand.__name__}(\n    {self.left},\n    {self.right}\n)"
     
-def generate_expr_tree(depth, shape=(1,1), dtype=float, rng_factory=None, var_idx=0):
+def generate_expr_tree(depth, shape=(1,1), dtype=float, rng_factory=None, var_idx=0, has_variable=False):
     unary_specs = [s for s in opSpec.opSpec_list if s.nargs == 1]
     binary_specs = [s for s in opSpec.opSpec_list if s.nargs == 2]
 
     if depth == 0:
-        # Choose a variable or a constant
-        if np.random.rand() < 0.5:
-            return Var(var_idx, rng_factory, shape), var_idx + 1
+        # Ensure at least one variable is included
+        if not has_variable or np.random.rand() < 0.5:
+            return Var(var_idx, rng_factory, shape, dtype), var_idx + 1, True
         else:
             # Choose a constant with the same shape
             if rng_factory is not None:
-                value = rng_factory(shape=shape)
+                value = rng_factory(shape=shape).astype(dtype)
             else:
-                value = np.random.uniform(size=shape)
-            return Const(value), var_idx
+                value = np.random.uniform(size=shape).astype(dtype)
+            return Const(value, dtype), var_idx, has_variable
+
     if np.random.rand() < 0.5 and len(unary_specs) > 0:
         # Choose a unary operator
         op_spec = np.random.choice(unary_specs)
         operand = op_spec.op
-        child, new_var_idx = generate_expr_tree(depth-1, shape, dtype, op_spec.rng_factory, var_idx)
-        return UnaryOp(operand, child), new_var_idx
+        child, new_var_idx, has_variable = generate_expr_tree(depth-1, shape, dtype, op_spec.rng_factory, var_idx, has_variable)
+        return UnaryOp(operand, child, dtype), new_var_idx, has_variable
     elif len(binary_specs) > 0:
         op_spec = np.random.choice(binary_specs)
         operand = op_spec.op
-        left, new_var_idx = generate_expr_tree(depth-1, shape, dtype, op_spec.rng_factory, var_idx)
-        right, final_var_idx = generate_expr_tree(depth-1, shape, dtype, op_spec.rng_factory, new_var_idx)
-        return BinaryOp(operand, left, right), final_var_idx
+        left, new_var_idx, has_variable = generate_expr_tree(depth-1, shape, dtype, op_spec.rng_factory, var_idx, has_variable)
+        right, final_var_idx, has_variable = generate_expr_tree(depth-1, shape, dtype, op_spec.rng_factory, new_var_idx, has_variable)
+        return BinaryOp(operand, left, right, dtype), final_var_idx, has_variable
     else:
         raise ValueError("No operators available")
 
@@ -107,7 +111,8 @@ def collect_rng_factories(node, factories=None):
 if __name__ == "__main__":
     shape = (1,2)
     # Generate the expression tree
-    expr_tree, _ = generate_expr_tree(3, shape)
+    dtype = np.float64
+    expr_tree, _, _ = generate_expr_tree(3, shape, dtype)
     
     # Get the RNG factories needed for inputs
     rng_factories = collect_rng_factories(expr_tree)
@@ -119,10 +124,13 @@ if __name__ == "__main__":
     print("import jax.numpy as jnp")
     print("from jax import lax")
     for i, input in enumerate(inputs):
-        print(f"x{i} =", f"jnp.array({np.array2string(input, separator=', ')})")
+        print(f"x{i} =", f"jnp.array({np.array2string(input, separator=', ')})", "dtype:", input.dtype)
+    
     print("results =", expr_tree)
     print("print(results)")
     
     # Evaluate the expression with the generated inputs
     results = expr_tree.evaluate(inputs)
     print("#Results:", results)
+    # Print the data type of the result
+    print("Result dtype:", results.dtype)

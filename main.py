@@ -38,6 +38,8 @@ def run_tests(param_grid, num_tests):
         atol = params["atol"]
         eps = params["eps"]
         shape = params["shape"]
+        dtype = params["dtype"]
+
 
         job_name = utils.param_to_jobname(params)
         num_failures = 0
@@ -45,31 +47,32 @@ def run_tests(param_grid, num_tests):
         for i in range(num_tests):
         
             logging.debug(f"Shape: {shape}, expr_depth: {expr_depth}")
-            expr_tree, _ = exprTree.generate_expr_tree(expr_depth, shape)
+            tree, _ = exprTree.generate_expr_tree(expr_depth, shape, dtype)
             
-            rng_factories = exprTree.collect_rng_factories(expr_tree)
+            rng_factories = exprTree.collect_rng_factories(tree)
         
-            inputs = [factory(shape=shape) for factory in rng_factories]
+            inputs = [factory(shape=shape).astype(dtype) for factory in rng_factories]
+
             logging.debug(f"Inputs: {inputs}")
-            logging.debug(f"Expr tree: {expr_tree}")
+            logging.debug(f"Expr tree: {tree}")
             
             # Evaluate the expression with the generated inputs
-            results = expr_tree.evaluate(inputs)
+            results = tree.evaluate(inputs)
             logging.debug(f"Results: {results}")
 
             # TODO: Figure out the atol, why will it change?
         
-            status, err_msg = oracle.NDCheck(lambda *args: expr_tree.evaluate(list(args)), inputs, order=order, mode=mode, atol = atol,eps=eps)
+            status, err_msg = oracle.NDCheck(lambda *args: tree.evaluate(list(args)), inputs, order=order, mode=mode, atol = atol,eps=eps)
             if status == "Fail":
                 failures_dir = os.path.join(failures_root_dir, job_name)
-                os.makedirs(os.path.join(failures_dir, job_name), exist_ok=True)
+                os.makedirs(failures_dir, exist_ok=True)
                 num_failures += 1
-                failure_hash = utils.generate_hash(expr_tree, inputs)
+                failure_hash = utils.generate_hash(tree, inputs)
                 failure_file = os.path.join(failures_dir, f"failure_{failure_hash}.txt")
                 with open(failure_file, "w") as f:
                     f.write(f"Error message: {err_msg}\n")
                     f.write("--------------------------------\n")
-                    f.write(f"Expr tree: {expr_tree}\n")
+                    f.write(f"Expr tree: {tree}\n")
                     f.write("--------------------------------\n")
                     f.write(f"Inputs: {inputs}\n")
                     f.write("--------------------------------\n")
@@ -92,16 +95,27 @@ def main():
     # shape = (np.random.randint(1, 5), np.random.randint(1, 5))
     # expr_depth = np.random.randint(1, 5)
 
+    # param_grid = {
+    #     "expr_depth": [2, 3, 4],
+    #     "order": [1, 2],
+    #     "mode": ["fwd", "rev"],
+    #     "atol": [1e-2, 1e-3, 1e-4, 1e-5],
+    #     "eps": [1e-2, 1e-3, 1e-4, 1e-5],
+    #     "shape": [(2,2), (3,3), (4,4)],
+    #     "dtype": [np.float16, np.float32, np.float64]
+    # }
+
     param_grid = {
-        "expr_depth": [2, 3, 4],
-        "order": [1, 2],
+        "expr_depth": [2],
+        "order": [1],
         "mode": ["fwd", "rev"],
         "atol": [1e-2, 1e-3, 1e-4, 1e-5],
         "eps": [1e-2, 1e-3, 1e-4, 1e-5],
-        "shape": [(2,2), (3,3), (4,4)]
+        "shape": [(1,2)],
+        "dtype": [np.float16, np.float32, np.float64]
     }
 
-    
+
     
     # run_tests(param_grid, num_tests)
     
