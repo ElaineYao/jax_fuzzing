@@ -47,7 +47,7 @@ def run_tests(param_grid, num_tests):
         for i in range(num_tests):
         
             logging.debug(f"Shape: {shape}, expr_depth: {expr_depth}")
-            tree, _ = exprTree.generate_expr_tree(expr_depth, shape, dtype)
+            tree, _, _ = exprTree.generate_expr_tree(expr_depth, shape, dtype)
             
             rng_factories = exprTree.collect_rng_factories(tree)
         
@@ -62,7 +62,7 @@ def run_tests(param_grid, num_tests):
 
             # TODO: Figure out the atol, why will it change?
         
-            status, err_msg = oracle.NDCheck(lambda *args: tree.evaluate(list(args)), inputs, order=order, mode=mode, atol = atol,eps=eps)
+            status, err_msg = oracle.NDCheckDiagonal(lambda *args: tree.evaluate(list(args)), inputs, order=order, mode=mode, atol = atol,eps=eps)
             if status == "Fail":
                 failures_dir = os.path.join(failures_root_dir, job_name)
                 os.makedirs(failures_dir, exist_ok=True)
@@ -117,7 +117,7 @@ def main():
 
 
     
-    # run_tests(param_grid, num_tests)
+    run_tests(param_grid, num_tests)
     
     utils.aggregate_results(param_grid, results_dir, result_csv)
   

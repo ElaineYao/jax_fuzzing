@@ -33,7 +33,7 @@ opSpec_list = [
     # OpSpec(
     #     op = lax.div,
     #     nargs = 2,
-    #     rng_factory = rnf.rand_positive), # TODO: Constraints on both left and right operands
+    #     rng_factory = rnf.rand_positive) # TODO: Constraints on both left and right operands
     OpSpec(
         op = lax.add,
         nargs = 2,
