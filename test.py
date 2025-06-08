@@ -24,10 +24,10 @@ primals = (1.0, 2.0)
 jvp_primals, tangent_jvp = jax.jvp(f_add, primals, tangents)
 print(jvp_primals, tangent_jvp)
 
-# primals, f_vjp =jax.vjp(f_add, *primals)
+primals, f_vjp =jax.vjp(f_add, *primals)
 
-# cotangent_vjp = f_vjp(cotangents)
-
+cotangent_vjp = f_vjp(cotangent)
+print(cotangent_vjp)
 
 # jvp_res = inner_prod(tangent_jvp, cotangents)
 # vjp_res = inner_prod(tangents, cotangent_vjp)
