@@ -48,26 +48,33 @@ def numerical_jvp(f, primals, tangents, eps):
     numerical_jvp_res = (f_pos - f_neg)/(2*eps)
     return numerical_jvp_res
 
-def check_jvp(f, f_jvp, args, rng_key, dtype, atol=None, rtol=None, eps=1e-5, err_msg=''):
+# def check_jvp(f, args, atol=None, rtol=None, eps=1e-5):
+
     
-    tangent = jax.random.normal(rng_key, shape=args.shape, dtype = dtype)
-    v_out, t_out = f_jvp(args, tangent)
-    v_out_expected = f(*args)
-    t_out_expected = numerical_jvp(f, args, tangent, eps=eps)
+    # tangent = jax.random.normal(rng_key, shape=args.shape, dtype = dtype)
+    # v_out, t_out = f_jvp(args, tangent)
+    # v_out_expected = f(*args)
+    # t_out_expected = numerical_jvp(f, args, tangent, eps=eps)
 
-    is_v_out_close = jax.numpy.allclose(v_out, v_out_expected, rtol=rtol, atol = atol, equal_nan=True)
-    logging.debug(f"V_out: {v_out}. V_out_expected: {v_out_expected}.")
-    if not is_v_out_close:
-        logging.debug(f"V_out and V_out_expected isn't close because |V_out - V_out_expected| > atol +rtol*|V_out_expected|")
+    # is_v_out_close = jax.numpy.allclose(v_out, v_out_expected, rtol=rtol, atol = atol, equal_nan=True)
+    # logging.debug(f"V_out: {v_out}. V_out_expected: {v_out_expected}.")
+    # if not is_v_out_close:
+    #     logging.debug(f"V_out and V_out_expected isn't close because |V_out - V_out_expected| > atol +rtol*|V_out_expected|")
 
-    is_t_out_close = jax.numpy.allclose(t_out, t_out_expected, rtol=rtol, atol = atol, equal_nan=True)
-    logging.debug(f"T_out: {t_out}. T_out_expected: {t_out_expected}.")
-    if not is_t_out_close:
-        logging.debug(f"T_out and T_out_expected isn't close because |T_out - T_out_expected| > atol +rtol*|T_out_expected|")
+    # is_t_out_close = jax.numpy.allclose(t_out, t_out_expected, rtol=rtol, atol = atol, equal_nan=True)
+    # logging.debug(f"T_out: {t_out}. T_out_expected: {t_out_expected}.")
+    # if not is_t_out_close:
+    #     logging.debug(f"T_out and T_out_expected isn't close because |T_out - T_out_expected| > atol +rtol*|T_out_expected|")
+           
 
+# def NDCheck_grads(fn, args, order, mode, atol=1e-5, rtol=None, eps=1e-3):
+#     if mode == "fwd" and order == 1:
+#         check_jvp(fn, args, atol=atol, rtol=rtol, eps=eps)
    
 
-# def NDCheck_grads(fn, args, modes=("fwd", "rev"), atol=1e-5, rtol=None, eps=1e-3):
+        # _check_jvp(f, partial(api.jvp, f), args, err_msg=fwd_msg)
+        # _check_jvp = partial(check_jvp, atol=atol, rtol=rtol, eps=eps)
+        # check_jvp()
 
 # def NDCheckDiagonal(fn, inputs, order, mode="fwd", atol=1e-5, eps=1e-3):
 #     # We only care about the diagonal of the Jacobian

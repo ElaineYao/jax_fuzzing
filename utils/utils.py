@@ -6,8 +6,19 @@ import pandas as pd
 import itertools
 import jax
 from jax import lax
+from jax.tree_util import tree_flatten
+import jax.numpy as jnp
 
+def inner_prod(pytree1, pytree2):
+    """
+    Compute the inner product between two pytrees of matching structure.
 
+    Each leaf should be a scalar or array. The result is a scalar.
+    """
+    flat1, _ = tree_flatten(pytree1)
+    flat2, _ = tree_flatten(pytree2)
+
+    return sum(jnp.vdot(x, y) for x, y in zip(flat1, flat2))
 
 def load_yaml(path):
     with open(path, "r") as f:
