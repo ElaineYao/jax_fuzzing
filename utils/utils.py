@@ -8,6 +8,7 @@ import jax
 from jax import lax
 from jax.tree_util import tree_flatten
 import jax.numpy as jnp
+from functools import partial
 
 def inner_prod(pytree1, pytree2):
     """
@@ -33,13 +34,6 @@ def rand_like(rng, x):
     return results
 
 
-# TODO: Add safe subtraction with the inf-inf=0 semantics
-def numerical_jvp(f, primals, tangents, eps):
-    # Handle tuple inputs by mapping over them
-    delta = jax.tree.map(lambda t: lax.mul(t, eps), tangents)
-    f_pos = f(*jax.tree.map(lambda p, d: lax.add(p, d), primals, delta))
-    f_neg = f(*jax.tree.map(lambda p, d: lax.sub(p, d), primals, delta))
-    return lax.mul((f_pos - f_neg), 0.5 / eps)
 
 
 def generate_hash(*args):
@@ -79,7 +73,21 @@ def aggregate_results(param_grid, results_dir, output_csv):
     df = pd.DataFrame(data)
     df.to_csv(output_csv, index=False)
 
+def _rand_dtype(rand, shape, dtype, scale=1.0):
+    if len(shape) >0 and isinstance(shape[0], tuple):
+        return tuple(np.asarray(scale * rand(s), dtype) for s in shape)
+    else:
+        return np.asarray(scale * rand(shape), dtype)
 
+def rand_default(rng, scale=3):
+    return partial(_rand_dtype, rng.standard_normal, scale=scale)
 
+def rand_normal(rng, scale=1):
+    return partial(_rand_dtype, rng.standard_normal, scale=scale)
 
+if __name__ == "__main__":
+    rng = np.random.default_rng()
+    f = rand_default(rng, scale=3)
+
+    print(f(shape=((3,), (3,)), dtype=np.float32))
                 

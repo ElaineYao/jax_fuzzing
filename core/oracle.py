@@ -58,12 +58,14 @@ def check_grads_jvp_2(f, primals, tangents, eps, order = 2):
 
 def check_grads_vjp_1(f, primals, cotangent, tangent, eps):
 
+    # print("primals:", tree_util.tree_structure(primals)) 
+
     _, vjp_f = jax.vjp(f, *primals)
     vjp_AD = vjp_f(cotangent)
-    print("vjp_AD:", vjp_AD)
+    # print("vjp_AD:", vjp_AD)
     vjp_AD_ip = utils.inner_prod(vjp_AD, tangent)
     jvp_ND = numerical_jvp_1(f, primals, tangent, eps)
-    print("jvp_ND:", jvp_ND)
+    # print("jvp_ND:", jvp_ND)
     jvp_ND_ip = utils.inner_prod(cotangent, jvp_ND)
     return vjp_AD_ip, jvp_ND_ip
 

@@ -12,13 +12,14 @@ from core import rngFactory as rnf
 config = utils.load_yaml(os.path.join(proj_root, "configs.yaml"))
 
 class OpSpec:
-    def __init__(self, op, nargs, rng_factory, dtypes=float, tol=config["default_tol"]):
+    def __init__(self, op, nargs, rng_factory, name, dtypes=float, tol=config["default_tol"]):
         self.op = op
         self.nargs = nargs
         self.rng_factory = rng_factory
         self.dtypes = dtypes
         self.tol = tol
         self.dtypes = dtypes
+        self.name = name
 
 
 opSpec_list = [
@@ -38,7 +39,26 @@ opSpec_list = [
         op = lax.add,
         nargs = 2,
         rng_factory = rnf.rand_positive,
-        dtypes = dtypes.float_dtypes)
+        dtypes = dtypes.float_dtypes,
+        name = "+"),
+    OpSpec(
+        op = lax.mul,
+        nargs = 2,
+        rng_factory = rnf.rand_positive,
+        dtypes = dtypes.float_dtypes,
+        name = "*"),
+    OpSpec(
+        op = lax.sub,
+        nargs = 2,
+        rng_factory = rnf.rand_positive,
+        dtypes = dtypes.float_dtypes,
+        name = "-"),
+    OpSpec(
+        op = lax.div,
+        nargs = 2,
+        rng_factory = rnf.rand_positive,
+        dtypes = dtypes.float_dtypes,
+        name = "/")
 ]
 
 
